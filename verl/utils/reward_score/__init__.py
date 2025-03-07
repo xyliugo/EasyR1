@@ -13,8 +13,8 @@
 # limitations under the License.
 
 
-from .math import math_compute_score
+from .math import math_compute_score, caption_math_compute_score
 from .r1v import r1v_compute_score
 
 
-__all__ = ["math_compute_score", "r1v_compute_score"]
+__all__ = ["math_compute_score", "r1v_compute_score", "caption_math_compute_score"]

@@ -30,3 +30,12 @@ def math_acc_reward(predict_str: str, ground_truth: str) -> float:
 
 def math_compute_score(predict_str: str, ground_truth: str) -> float:
     return 0.9 * math_acc_reward(predict_str, ground_truth) + 0.1 * math_format_reward(predict_str)
+
+
+def caption_math_format_reward(predict_str: str) -> float:
+    pattern = re.compile(r"<conditions>.*</conditions>.*<think>.*</think>.*\\boxed\{.*\}.*", re.DOTALL)
+    format_match = re.fullmatch(pattern, predict_str)
+    return 1.0 if format_match else 0.0
+
+def caption_math_compute_score(predict_str: str, ground_truth: str) -> float:
+    return 0.9 * math_acc_reward(predict_str, ground_truth) + 0.1 * caption_math_format_reward(predict_str)
