@@ -116,21 +116,38 @@ class FSDPWorker(Worker):
             self.config.actor.global_batch_size_per_device = (
                 self.config.actor.global_batch_size // self.device_mesh.shape[0] * self.ulysses_sequence_parallel_size
             )
-            assert (
+            if (
                 self.config.actor.global_batch_size_per_device
                 % self.config.actor.micro_batch_size_per_device_for_update
-                == 0
-            )
+                != 0
+            ):
+                raise ValueError("Global batch size should be divisible by the micro batch size.")
+
+            if (
+                self.config.actor.fsdp.enable_cpu_offload
+                and self.config.actor.global_batch_size_per_device
+                != self.config.actor.micro_batch_size_per_device_for_update
+            ):
+                raise ValueError("Cannot use FSDP's CPU offload when gradient accumulation is enabled.")
+
         elif self._is_critic:
             self.config.critic.global_batch_size *= self.config.rollout.n
             self.config.critic.global_batch_size_per_device = (
                 self.config.critic.global_batch_size // self.device_mesh.shape[0] * self.ulysses_sequence_parallel_size
             )
-            assert (
+            if (
                 self.config.critic.global_batch_size_per_device
                 % self.config.critic.micro_batch_size_per_device_for_update
-                == 0
-            )
+                != 0
+            ):
+                raise ValueError("Global batch size should be divisible by the micro batch size.")
+
+            if (
+                self.config.critic.fsdp.enable_cpu_offload
+                and self.config.critic.global_batch_size_per_device
+                != self.config.critic.micro_batch_size_per_device_for_update
+            ):
+                raise ValueError("Cannot use FSDP's CPU offload when gradient accumulation is enabled.")
 
     def _build_model_optimizer(
         self,
@@ -251,7 +268,7 @@ class FSDPWorker(Worker):
                 betas=optim_config.betas,
                 weight_decay=optim_config.weight_decay,
             )
-            num_warmup_steps = int(optim_config.lr_warmup_steps_ratio * optim_config.training_steps)
+            num_warmup_steps = int(optim_config.lr_warmup_ratio * optim_config.training_steps)
             self.lr_scheduler = get_constant_schedule_with_warmup(
                 optimizer=self.optimizer, num_warmup_steps=num_warmup_steps
             )
@@ -359,11 +376,11 @@ class FSDPWorker(Worker):
             offload_fsdp_model(self.fsdp_module)
 
     @register(dispatch_mode=Dispatch.ONE_TO_ALL)
-    def load_checkpoint(self, path: str, del_local_after_load: bool = True):
+    def load_checkpoint(self, path: str, remove_ckpt_after_load: bool = False):
         if self._use_param_offload:
             load_fsdp_model(self.fsdp_module)
 
-        self.checkpoint_manager.load_checkpoint(path=path, del_local_after_load=del_local_after_load)
+        self.checkpoint_manager.load_checkpoint(path=path, remove_ckpt_after_load=remove_ckpt_after_load)
         dist.barrier()
         if self._use_param_offload:
             offload_fsdp_model(self.fsdp_module)
