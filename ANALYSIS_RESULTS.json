@@ -1,0 +1,18 @@
+{
+  "target_commit_sha": "098931530606d22f867fd121b1dcb3225a43661f",
+  "commit_author": "hiyouga",
+  "commit_date": "2025-08-08",
+  "parameter_changes": {
+    "micro_batch_size_per_device_for_update": {
+      "before": 4,
+      "after": 1,
+      "line_number": 37
+    },
+    "micro_batch_size_per_device_for_experience": {
+      "before": 16,
+      "after": 2,
+      "line_number": 38
+    }
+  },
+  "related_issue_number_list": []
+}
