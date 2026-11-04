@@ -6,12 +6,12 @@
     "micro_batch_size_per_device_for_update": {
       "before": 4,
       "after": 1,
-      "line_number": 37
+      "line_number": 27
     },
     "micro_batch_size_per_device_for_experience": {
       "before": 16,
       "after": 2,
-      "line_number": 38
+      "line_number": 28
     }
   },
   "related_issue_number_list": []
